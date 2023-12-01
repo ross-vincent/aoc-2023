@@ -18,26 +18,11 @@ func main() {
 	val := 0
 	lines := strings.Split(string(in), "\r\n")
 	for i, line := range lines {
-		lineDigits := []string{}
-		str := ""
-		for _, char := range line {
-			if _, err := strconv.Atoi(string(char)); err == nil {
-				lineDigits = append(lineDigits, getDigitsFromString(str)...)
-				lineDigits = append(lineDigits, string(char))
-				str = ""
-				continue
-			}
-
-			str += string(char)
-		}
-		lineDigits = append(lineDigits, getDigitsFromString(str)...)
-
+		lineDigits := getDigitsFromString(line)
 		if len(lineDigits) == 0 {
 			fmt.Printf("invalid line (%d): %s", i+1, line)
 			continue
 		}
-
-		// fmt.Printf("line %d digits: %+v\n", i+1, lineDigits)
 
 		lineVal, err := strconv.Atoi(lineDigits[0] + lineDigits[len(lineDigits)-1])
 		if err != nil {
@@ -51,76 +36,70 @@ func main() {
 	fmt.Printf("%d", val)
 }
 
-type stringIndex struct {
+type digitIndex struct {
 	index int
-	val   string
+	digit string
 }
 
 func getDigitsFromString(str string) []string {
-	var digits []stringIndex
-	for _, digitStr := range []string{"one", "two", "three", "four", "five", "six", "seven", "eight", "nine"} {
-		digits = append(digits, getIndexesOfStrings(str, digitStr)...)
+	var digitIndexes []digitIndex
+	for _, digits := range []struct {
+		searchString string
+		numericDigit string
+	}{
+		{"1", "1"},
+		{"2", "2"},
+		{"3", "3"},
+		{"4", "4"},
+		{"5", "5"},
+		{"6", "6"},
+		{"7", "7"},
+		{"8", "8"},
+		{"9", "9"},
+		{"one", "1"},
+		{"two", "2"},
+		{"three", "3"},
+		{"four", "4"},
+		{"five", "5"},
+		{"six", "6"},
+		{"seven", "7"},
+		{"eight", "8"},
+		{"nine", "9"},
+	} {
+		digitIndexes = append(digitIndexes, getDigitIndexes(str, digits.searchString, digits.numericDigit)...)
 	}
 
-	if len(digits) == 0 {
+	if len(digitIndexes) == 0 {
 		return []string{}
 	}
 
-	slices.SortFunc(digits, func(a, b stringIndex) int {
+	slices.SortFunc(digitIndexes, func(a, b digitIndex) int {
 		return a.index - b.index
 	})
 
-	out := make([]string, len(digits))
-	for i := range digits {
-		out[i] = getNumericDigit(digits[i].val)
+	out := make([]string, len(digitIndexes))
+	for i := range digitIndexes {
+		out[i] = digitIndexes[i].digit
 	}
 
 	return out
 }
 
-func getIndexesOfStrings(str string, searchString string) []stringIndex {
-	var stringIndexes []stringIndex
-	haystack := strings.Clone(str)
+func getDigitIndexes(str, searchString, digit string) []digitIndex {
+	var digitIndexes []digitIndex
 	for {
-		index := strings.Index(haystack, searchString)
+		index := strings.Index(str, searchString)
 		if index > -1 {
-			stringIndexes = append(stringIndexes, stringIndex{
+			digitIndexes = append(digitIndexes, digitIndex{
 				index: index,
-				val:   searchString,
+				digit: digit,
 			})
-			haystack = strings.Replace(haystack, searchString, strings.Repeat("x", len(searchString)), 1)
+			str = strings.Replace(str, searchString, strings.Repeat("x", len(searchString)), 1)
 			continue
 		}
 
 		break
 	}
 
-	return stringIndexes
-}
-
-func getNumericDigit(val string) string {
-	switch val {
-
-	case "one":
-		return "1"
-	case "two":
-		return "2"
-	case "three":
-		return "3"
-	case "four":
-		return "4"
-	case "five":
-		return "5"
-	case "six":
-		return "6"
-	case "seven":
-		return "7"
-	case "eight":
-		return "8"
-	case "nine":
-		return "9"
-
-	}
-
-	return ""
+	return digitIndexes
 }
